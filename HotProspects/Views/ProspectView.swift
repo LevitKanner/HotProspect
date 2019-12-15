@@ -7,14 +7,18 @@
 //
 
 import SwiftUI
+import CodeScanner
 
 struct ProspectView: View {
+    
+    ///Properties
     enum FilterType {
         case none , contacted , uncontacted
     }
     
     let filter : FilterType
     
+    ///Computes  a title for the navigation bar using the filter property
     var title: String{
         switch filter {
         case .none:
@@ -26,6 +30,7 @@ struct ProspectView: View {
         }
     }
     
+    ///Filters prospects based on their isContacted property
     var filteredProspects: [Prospect]{
         switch filter{
         case .contacted:
@@ -35,13 +40,19 @@ struct ProspectView: View {
             }
         case .none:
             return prospects.prospects
+            
         case .uncontacted:
             return prospects.prospects.filter { (prospect) -> Bool in
                 !prospect.isContacted
             }
         }
     }
+    
+    ///Reads prospects data placed in the environment in the content view
     @EnvironmentObject var prospects: Prospects
+    
+    ///Shows the scanner view when flipped
+    @State private var showingScanner = false
     
     
     var body: some View {
@@ -55,19 +66,46 @@ struct ProspectView: View {
                             .font(.custom("Monaco", size: 12))
                             .foregroundColor(.gray)
                     }
+                    .contextMenu {
+                        Button(action: {
+                            self.prospects.toggle(prospect)
+                        }){
+                            Text(prospect.isContacted ? "Mark Uncontacted" : "Mark Contacted")
+                        }
+                    }
                 }
             }
-            .navigationBarTitle(title)
-            .navigationBarItems(trailing: Button(action:{
-                let paul = Prospect()
-                paul.email = "Paulhudson@gmail.com"
-                paul.name = "Paul Hudson"
-                
-                self.prospects.prospects.append(paul)
-            }){
-                Image(systemName: "qrcode.viewfinder")
-                Text("Scan")
+            .sheet(isPresented: $showingScanner, content: {
+                CodeScannerView(codeTypes: [.qr], simulatedData: "levit kaner\n lkanner21@gmail.com", completion: self.handleScan)
             })
+                .navigationBarTitle(title)
+                .navigationBarItems(trailing: Button(action:{
+                    self.showingScanner = true
+                }){
+                    Image(systemName: "qrcode.viewfinder")
+                    Text("Scan")
+                })
+        }
+    }
+    
+    
+    ///Handles when a QR code has been scanned
+    func handleScan(result: Result<String , CodeScannerView.ScanError>){
+        ///Dismisses the scanner view 
+        self.showingScanner = false
+        
+        ///Fetches data from the Result tyoe
+        switch result{
+        case .success(let code ):
+            let details = code.components(separatedBy: "\n")
+            guard details.count == 2 else {return}
+            let newProspect = Prospect()
+            newProspect.name = details.first ?? "Anonymous"
+            newProspect.email = details.last ?? "noemail"
+            self.prospects.prospects.append(newProspect)
+            
+        case .failure(let error):
+            print("An error occurred while scanning code \(error)")
         }
     }
 }
