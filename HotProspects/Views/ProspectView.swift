@@ -8,6 +8,7 @@
 
 import SwiftUI
 import CodeScanner
+import UserNotifications
 
 struct ProspectView: View {
     
@@ -72,6 +73,14 @@ struct ProspectView: View {
                         }){
                             Text(prospect.isContacted ? "Mark Uncontacted" : "Mark Contacted")
                         }
+                        
+                        if !prospect.isContacted{
+                            Button(action: {
+                                self.addNotificaton(for: prospect)
+                            }){
+                                Text("Remind me")
+                            }
+                        }
                     }
                 }
             }
@@ -108,6 +117,47 @@ struct ProspectView: View {
         case .failure(let error):
             print("An error occurred while scanning code \(error)")
         }
+    }
+    
+    
+    func addNotificaton(for prospect: Prospect){
+        let center = UNUserNotificationCenter.current()
+        
+        let addRequest = {
+            ///Defines the notification content
+            let content = UNMutableNotificationContent()
+            content.title = "Contact \(prospect.name)"
+            content.subtitle = prospect.email
+            content.sound = .default
+            
+            var dateComponents = DateComponents()
+            dateComponents.hour = 9
+            
+            ///Creates a notification trigger
+           /// let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: false)
+            let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 4, repeats: false)
+            
+            ///Creates a notification request with the defined trigger and content
+            let request = UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: trigger)
+            
+            center.add(request)
+        }
+        
+        center.getNotificationSettings { (settings) in
+            if settings.authorizationStatus == .authorized{
+                addRequest()
+            }else{
+                center.requestAuthorization(options: [.alert , .badge , .sound]) { (success, error) in
+                    if let error = error {
+                        print("Oops! \(error)")
+                        return
+                    }
+                    addRequest()
+                    
+                }
+            }
+        }
+        
     }
 }
 
