@@ -102,7 +102,8 @@ struct ProspectView: View {
             let newProspect = Prospect()
             newProspect.name = details.first ?? "Anonymous"
             newProspect.email = details.last ?? "noemail"
-            self.prospects.prospects.append(newProspect)
+            self.prospects.add(newProspect)
+            
             
         case .failure(let error):
             print("An error occurred while scanning code \(error)")
