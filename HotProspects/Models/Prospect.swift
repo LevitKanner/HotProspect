@@ -9,7 +9,15 @@
 import Foundation
 import Combine
 
-class Prospect: Codable , Identifiable{
+class Prospect: Codable , Identifiable , Comparable{
+    static func < (lhs: Prospect, rhs: Prospect) -> Bool {
+        lhs.name < rhs.name
+    }
+    
+    static func == (lhs: Prospect, rhs: Prospect) -> Bool {
+        lhs.name  ==  rhs.name  &&   lhs.email ==  rhs.email
+    }
+    
     let id = UUID()
     var name = "Anonymous"
     var email = ""
@@ -58,11 +66,19 @@ class Prospects: ObservableObject{
         self.save()
     }
     
+    func sort(){
+        self.prospects.sort()
+    }
+    
+    func sortByRecent(){
+        self.prospects.sort { (first, second) -> Bool in
+            first.id < second.id
+        }
+    }
     
     
     
-    
-    
+    ///Ignore code below 
     func saveToDirectory(){
         let url = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!.appendingPathComponent(Self.saveKey)
         if let data = try? JSONEncoder().encode(prospects){
