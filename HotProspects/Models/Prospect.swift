@@ -25,20 +25,26 @@ class Prospects: ObservableObject{
     
     //Initialization
     init(){
-        if let data = UserDefaults.standard.data(forKey: Self.saveKey){
-            if let decodedData = try? JSONDecoder().decode([Prospect].self, from: data){
-            self.prospects = decodedData
+        let path = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+        let url = path.appendingPathComponent(Self.saveKey)
+        if let data = try?  Data(contentsOf: url){
+            if let decoded = try? JSONDecoder().decode([Prospect].self, from: data){
+                self.prospects = decoded
                 return
             }
         }
-         self.prospects = []
+        self.prospects = []
     }
     
+    
+    
     //Methods
-   private func save(){
-        if let encoded = try? JSONEncoder().encode(prospects){
-            UserDefaults.standard.set(encoded, forKey: Self.saveKey)
+    private func save(){
+        let url = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!.appendingPathComponent(Self.saveKey)
+        if let data = try? JSONEncoder().encode(prospects){
+            try? data.write(to: url)
         }
+        
     }
     
     func toggle(_ prospect: Prospect) {
@@ -50,5 +56,34 @@ class Prospects: ObservableObject{
     func add(_ prospect: Prospect){
         self.prospects.append(prospect)
         self.save()
+    }
+    
+    
+    
+    
+    
+    
+    func saveToDirectory(){
+        let url = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!.appendingPathComponent(Self.saveKey)
+        if let data = try? JSONEncoder().encode(prospects){
+            try? data.write(to: url)
+        }
+    }
+    
+
+    func getFileDirectory()-> URL {
+        return FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+    }
+    
+    func loadFromDirectory(){
+        let path = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+        let url = path.appendingPathComponent(Self.saveKey)
+        if let data = try?  Data(contentsOf: url){
+            if let decoded = try? JSONDecoder().decode([Prospect].self, from: data){
+                self.prospects = decoded
+                return
+            }
+        }
+        self.prospects = []
     }
 }
