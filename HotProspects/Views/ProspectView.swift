@@ -55,6 +55,10 @@ struct ProspectView: View {
     ///Shows the scanner view when flipped
     @State private var showingScanner = false
     
+    ///Tracks the state of actionSheet
+    @State private var showingActionSheet = false
+    
+    
     
     var body: some View {
         NavigationView{
@@ -72,23 +76,12 @@ struct ProspectView: View {
                         Spacer()
                         
                         if self.filter == .none{
-                            if prospect.isContacted == true{
-                                Image(systemName: "phone")
-                                    .resizable()
-                                    .scaledToFit()
+                                Image(systemName: prospect.isContacted ? "phone" : "phone.down")
+                                    .imageScale(.medium)
                                     .foregroundColor(.blue)
-                                    .frame(width: 30 , height: 30)
-                            }else{
-                                Image(systemName: "phone.down")
-                                    .resizable()
-                                    .scaledToFit()
-                                    .foregroundColor(.blue)
-                                    .frame(width: 30 , height: 30)
-                            }
                         }
-                        
                     }
-                        
+                        ///Adds a context menu
                     .contextMenu {
                         Button(action: {
                             self.prospects.toggle(prospect)
@@ -100,17 +93,35 @@ struct ProspectView: View {
                             Button(action: {
                                 self.addNotificaton(for: prospect)
                             }){
+                                Image(systemName: "bell")
                                 Text("Remind me")
                             }
                         }
                     }
                 }
             }
+                
+                ///Presents the scanner view
             .sheet(isPresented: $showingScanner, content: {
                 CodeScannerView(codeTypes: [.qr], simulatedData: "levit kaner\n lkanner21@gmail.com", completion: self.handleScan)
             })
+                
+                ///Adds an action sheet for users to sort contact list
+                .actionSheet(isPresented: $showingActionSheet, content: { () -> ActionSheet in
+                    ActionSheet(title: Text("Sort contacts by"), message: nil, buttons:
+                        [
+                            .default(Text("Name"), action: {
+                                self.prospects.sort()
+                            }),
+                            .default(Text("Recent"), action: {
+                                self.prospects.sortByRecent()
+                            }),
+                        .cancel()
+                    ])
+                })
+                
                 .navigationBarTitle(title)
-                .navigationBarItems(trailing: Button(action:{
+                .navigationBarItems(leading: Button(action: {self.showingActionSheet = true }){Text("Sort list")}  , trailing: Button(action:{
                     self.showingScanner = true
                 }){
                     Image(systemName: "qrcode.viewfinder")
