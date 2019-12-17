@@ -60,13 +60,35 @@ struct ProspectView: View {
         NavigationView{
             List{
                 ForEach(self.filteredProspects){prospect in
-                    VStack(alignment: .leading){
-                        Text(prospect.name)
-                            .font(.custom("optima", size: 20))
-                        Text(prospect.email)
-                            .font(.custom("Monaco", size: 12))
-                            .foregroundColor(.gray)
+                    HStack{
+                        VStack(alignment: .leading){
+                            Text(prospect.name)
+                                .font(.custom("optima", size: 20))
+                            Text(prospect.email)
+                                .font(.custom("Monaco", size: 12))
+                                .foregroundColor(.gray)
+                        }
+                        
+                        Spacer()
+                        
+                        if self.filter == .none{
+                            if prospect.isContacted == true{
+                                Image(systemName: "phone")
+                                    .resizable()
+                                    .scaledToFit()
+                                    .foregroundColor(.blue)
+                                    .frame(width: 30 , height: 30)
+                            }else{
+                                Image(systemName: "phone.down")
+                                    .resizable()
+                                    .scaledToFit()
+                                    .foregroundColor(.blue)
+                                    .frame(width: 30 , height: 30)
+                            }
+                        }
+                        
                     }
+                        
                     .contextMenu {
                         Button(action: {
                             self.prospects.toggle(prospect)
@@ -134,7 +156,7 @@ struct ProspectView: View {
             dateComponents.hour = 9
             
             ///Creates a notification trigger
-           /// let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: false)
+            /// let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: false)
             let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 4, repeats: false)
             
             ///Creates a notification request with the defined trigger and content
